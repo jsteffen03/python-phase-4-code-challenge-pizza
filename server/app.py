@@ -19,12 +19,13 @@ db.init_app(app)
 
 api = Api(app)
 
-
+#class restaurants to handle getting all restaurants
 class Restaurants(Resource):
     def get(self):
         restaurants = Restaurant.query.all()
         return [restaurant.to_dict(rules=('-restaurant_pizzas',)) for restaurant in restaurants], 200
 
+# class oneRestaurant to handle getting one restaurant and deleting
 class OneRestaurant(Resource):
     def get(self,id):
         restaurant = Restaurant.query.get(id)
@@ -32,7 +33,7 @@ class OneRestaurant(Resource):
             return restaurant.to_dict(), 200
         else:
             return {"error": "Restaurant not found"}, 404
-    
+
     def delete(self, id):
         restaurant = Restaurant.query.get(id)
         if restaurant:
@@ -42,11 +43,13 @@ class OneRestaurant(Resource):
         else:
             return {"error": "Restaurant not found"}, 404
         
+# class pizzas to handle getting all pizzas
 class Pizzas(Resource):
     def get(self):
         pizzas = Pizza.query.all()
         return [pizza.to_dict(rules=('-restaurant_pizzas',)) for pizza in pizzas], 200
     
+# class restaurant_pizzas to handle posting
 class RestaurantPizzas(Resource):
     def post(self):
         try:
