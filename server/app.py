@@ -20,9 +20,56 @@ db.init_app(app)
 api = Api(app)
 
 
-@app.route("/")
-def index():
-    return "<h1>Code challenge</h1>"
+class Restaurants(Resource):
+    def get(self):
+        restaurants = Restaurant.query.all()
+        return [restaurant.to_dict(rules=('-restaurant_pizzas',)) for restaurant in restaurants], 200
+
+class OneRestaurant(Resource):
+    def get(self,id):
+        restaurant = Restaurant.query.get(id)
+        if restaurant:
+            return restaurant.to_dict(), 200
+        else:
+            return {"error": "Restaurant not found"}, 404
+    
+    def delete(self, id):
+        restaurant = Restaurant.query.get(id)
+        if restaurant:
+            db.session.delete(restaurant)
+            db.session.commit()
+            return {"message": "Restaurant deleted"}, 204
+        else:
+            return {"error": "Restaurant not found"}, 404
+        
+class Pizzas(Resource):
+    def get(self):
+        pizzas = Pizza.query.all()
+        return [pizza.to_dict(rules=('-restaurant_pizzas',)) for pizza in pizzas], 200
+    
+class RestaurantPizzas(Resource):
+    def post(self):
+        try:
+            data = request.get_json()
+            rp = RestaurantPizza(
+                price=data['price'],
+                pizza_id=data['pizza_id'],
+                restaurant_id=data['restaurant_id']
+            )
+            db.session.add(rp)
+            db.session.commit()
+            return rp.to_dict(), 201
+        except Exception as e:
+            print(f"Error: {e}")
+            return {'errors': ["validation errors"]}, 400
+
+    
+        
+api.add_resource(Restaurants, "/restaurants")
+api.add_resource(OneRestaurant, "/restaurants/<int:id>")
+api.add_resource(Pizzas, "/pizzas")
+api.add_resource(RestaurantPizzas, "/restaurant_pizzas")
+
 
 
 if __name__ == "__main__":
